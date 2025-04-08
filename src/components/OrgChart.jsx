@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import './OrgChart.css';
 
 function OrgChart({ employees, filteredEmployees, selectedTeam, selectedEmployee, onUpdateManager, isLoading, error }) {
-  // State initialization
   const [rootEmployees, setRootEmployees] = useState([]);
   const [visibleEmployeeIds, setVisibleEmployeeIds] = useState(new Set());
   const [highlightedEmployeeIds, setHighlightedEmployeeIds] = useState(new Set());
@@ -10,30 +9,25 @@ function OrgChart({ employees, filteredEmployees, selectedTeam, selectedEmployee
   const [dropTarget, setDropTarget] = useState(null);
   const [expandedNodes, setExpandedNodes] = useState(new Set());
 
-  // Memoized employee finder
   const findEmployee = useMemo(() => {
     return (id) => employees.find(e => e.id == id) || null;
   }, [employees]);
 
-  // Find root employees (employees with no manager)
   useEffect(() => {
     const roots = employees.filter(emp => emp.managerId == null);
     setRootEmployees(roots);
     
-    // Expand all root nodes by default
     const newExpanded = new Set(expandedNodes);
     roots.forEach(root => newExpanded.add(root.id));
     setExpandedNodes(newExpanded);
   }, [employees]);
 
-  // Calculate visible and highlighted employees
   useEffect(() => {
     if (isLoading || error) return;
   
     const newVisibleIds = new Set();
     const newHighlightedIds = new Set();
   
-    // Show full hierarchy when no filters
     if (!selectedTeam && !selectedEmployee) {
       employees.forEach(emp => newVisibleIds.add(emp.id));
       setVisibleEmployeeIds(newVisibleIds);
@@ -43,23 +37,19 @@ function OrgChart({ employees, filteredEmployees, selectedTeam, selectedEmployee
       return;
     }
   
-    // Show team hierarchy
     if (selectedTeam) {
       filteredEmployees.forEach(emp => {
         if (!emp) return;
         
-        // Add employee and highlight
         newVisibleIds.add(emp.id);
         newHighlightedIds.add(emp.id);
         
-        // Add all ancestors
         let current = emp;
         while (current?.managerId) {
           current = employees.find(e => e.id == current.managerId);
           if (current) newVisibleIds.add(current.id);
         }
         
-        // Add all descendants
         const showDescendants = (id) => {
           employees
             .filter(e => e?.managerId == id)
@@ -72,24 +62,20 @@ function OrgChart({ employees, filteredEmployees, selectedTeam, selectedEmployee
       });
     }
   
-    // Show individual employee hierarchy
     if (selectedEmployee) {
         console.log('selected employee line 77', selectedEmployee)
       const emp = employees.find(e => e.id == selectedEmployee.id);
       if (emp) {
-        // Add selected employee and highlight
         newVisibleIds.add(emp.id);
         console.log('newVisibleIds line 82', newVisibleIds)
         newHighlightedIds.add(emp.id);
         
-        // Add all ancestors
         let current = emp;
         while (current?.managerId) {
           current = employees.find(e => e.id == current.managerId);
           if (current) newVisibleIds.add(current.id);
         }
         
-        // Add all descendants
         const showDescendants = (id) => {
             console.log('inside showDescendants line 93')
           employees
@@ -108,7 +94,6 @@ function OrgChart({ employees, filteredEmployees, selectedTeam, selectedEmployee
     setHighlightedEmployeeIds(newHighlightedIds);
   }, [employees, filteredEmployees, selectedTeam, selectedEmployee, isLoading, error]);
 
-  // Toggle node expansion
   const toggleNode = (id) => {
     setExpandedNodes(prev => {
       const newSet = new Set(prev);
@@ -121,7 +106,6 @@ function OrgChart({ employees, filteredEmployees, selectedTeam, selectedEmployee
     });
   };
 
-  // Check if target is a descendant of source
   const isDescendant = (sourceId, targetId) => {
     if (sourceId == targetId) return true;
     return employees
@@ -129,7 +113,6 @@ function OrgChart({ employees, filteredEmployees, selectedTeam, selectedEmployee
       .some(child => isDescendant(child.id, targetId));
   };
 
-  // Drag and drop handlers
   const handleDragStart = (e, employee) => {
     setDraggedEmployee(employee);
     e.dataTransfer.setData('text/plain', employee.id);
@@ -156,7 +139,6 @@ function OrgChart({ employees, filteredEmployees, selectedTeam, selectedEmployee
     setDropTarget(null);
   };
 
-  // Employee Node Component
   const EmployeeNode = ({ employee , level = 0 }) => {
     console.log('employee and level is', employee, level)
     if (!employee || !visibleEmployeeIds.has(employee.id)) return null;
@@ -224,7 +206,6 @@ function OrgChart({ employees, filteredEmployees, selectedTeam, selectedEmployee
   useEffect(() => {
     console.log('rootEmployees', rootEmployees)
   })
-  // Loading and error states
   if (isLoading) return <div className="loading-org-chart">Loading organization chart...</div>;
   if (error) return <div className="error-org-chart">{error}</div>;
   if (employees.length == 0) return <div className="no-results">No employees data available</div>;
