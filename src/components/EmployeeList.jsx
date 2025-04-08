@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import './EmployeeList.css';
 
 function EmployeeList({ 
@@ -13,6 +13,44 @@ function EmployeeList({
   isLoading,
   error 
 }) {
+
+  const [employee, setEmployee] = useState([]);
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
+
+  useEffect(() => {
+    let filteredEmployees = [...employees];
+
+    if (selectedTeam) {
+      filteredEmployees = filteredEmployees.filter(emp => emp.team === selectedTeam);
+    }
+    if (debouncedSearchQuery) {
+      const query = debouncedSearchQuery.toLowerCase();
+      filteredEmployees = filteredEmployees.filter(emp => 
+        emp.name.toLowerCase().includes(query) || 
+        emp.designation.toLowerCase().includes(query) || 
+        emp.team.toLowerCase().includes(query)
+      );
+    }
+    setEmployee(filteredEmployees);
+  }, [debouncedSearchQuery, selectedTeam, employees]);
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+
+    if (debouncedSearchQuery) {
+      clearTimeout(window.searchTimeout);
+    }
+
+    window.searchTimeout = setTimeout(() => {
+      setDebouncedSearchQuery(value);
+    }, 2000);
+  };
+
+  useEffect(() => {
+    setEmployee(employees);
+  }, [employees]);
+
   return (
     <div className="employee-list-container">
       <h2>Employees</h2>
@@ -22,7 +60,7 @@ function EmployeeList({
           type="text"
           placeholder="Search employees..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={handleSearchChange}
           className="search-input"
         />
         
@@ -30,7 +68,7 @@ function EmployeeList({
           value={selectedTeam} 
           onChange={(e) => {
             setSelectedTeam(e.target.value);
-            onSelectEmployee(null); // Clear selected employee when changing team
+            onSelectEmployee(null);
           }}
           className="team-select"
         >
@@ -45,21 +83,21 @@ function EmployeeList({
       {error && <div className="error">{error}</div>}
       
       <ul className="employee-list">
-        {employees.map(employee => (
+        {employee.map(emp => (
           <li 
-            key={employee.id} 
-            className={`employee-item ${selectedEmployee?.id === employee.id ? 'selected' : ''}`}
-            onClick={() => onSelectEmployee(employee)}
+            key={emp.id} 
+            className={`employee-item ${selectedEmployee?.id === emp.id ? 'selected' : ''}`}
+            onClick={() => onSelectEmployee(emp)}
           >
-            <div className="employee-name">{employee.name}</div>
+            <div className="employee-name">{emp.name}</div>
             <div className="employee-info">
-              <span className="employee-designation">{employee.designation}</span>
-              <span className="employee-team">{employee.team}</span>
+              <span className="employee-designation">{emp.designation}</span>
+              <span className="employee-team">{emp.team}</span>
             </div>
           </li>
         ))}
         
-        {!isLoading && !error && employees.length === 0 && (
+        {!isLoading && !error && employee.length === 0 && (
           <li className="no-results">No employees match your search</li>
         )}
       </ul>
