@@ -44,7 +44,7 @@ function EmployeeList({
 
     window.searchTimeout = setTimeout(() => {
       setDebouncedSearchQuery(value);
-    }, 2000);
+    }, 1000);
   };
 
   useEffect(() => {

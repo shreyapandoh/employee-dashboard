@@ -27,6 +27,9 @@ npm start
 
 ```
 src/
+|── __tests__/
+│   ├── App.test.js
+│   ├── EmployeeList.test.js
 ├── components/
 │   ├── EmployeeList.jsx   # Employee listing with search/filter
 │   ├── EmployeeList.css
